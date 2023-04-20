@@ -1,117 +1,118 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   fdf.h.c                                              :+:      :+:    :+:   */
+/*   fdf.c                                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kikas <kikas@student.42.fr>                +#+  +:+       +#+        */
+/*   By: aoutifra <aoutifra@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/21 09:42:34 by kikas             #+#    #+#             */
-/*   Updated: 2023/03/21 09:58:41 by kikas            ###   ########.fr       */
+/*   Updated: 2023/04/20 11:07:39 by aoutifra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "fdf.h"
 
-void ft_readfile(char *file, t_fdf *data)
+void	scalemap(float *x, float *y, float *x1, float *y1, t_data *data)
 {
-    char* s;
-    int i;
-    i = 0;
-    int fd = open(file,O_RDONLY,777);
-
-    s = get_next_line(fd);
-    data->width = wordcount(0,s,' ');
-    while (get_next_line(fd))
-        i++;
-    data->hight = i;
-    free(s);
-    close(fd);
+	*x += (SCHIGHT / 2) + data->sc;
+	*x1 += (SCHIGHT / 2) + data->sc;
+	*y += (SCHIGHT / 3) + data->sv;
+	*y1 += (SCHIGHT / 3) + data->sv;
 }
 
-void getmap(char  *file,t_fdf *data,t_map **map)
+void	drawer(t_data *data, t_pt pt, float x1, float y1)
 {
-    char *s;
-    char **num;
-    int fd = open(file,O_RDONLY,777);
-    int i;
-    int j;
-    i = 0;
-    j = 0;
-    while (j < data->hight)
-    {
-        s = get_next_line(fd);
-        num = ft_split(s,' ');
-        i = 0 ;
-        while (num[i])
-            {
-                map[j][i].z = atoi(num[i]);
-                map[j][i].x = i;
-                map[j][i].y = j;
-                
-                free(num[i]);
-                i++;
-            }
-            free(num);
-        j++;
-    }
+	int		color;
+	float	max;
+	float	dx;
+	float	dy;
+	color = data->map[(int)pt.x][(int)pt.y].c;
+	iso(&pt.x, & pt.y, data->map[(int)pt.x][(int)pt.y].z, data);
+	iso(&x1, &y1, data->map[(int)x1][(int)y1].z, data);
+	scalemap(&pt.x, &pt.y, &x1, &y1, data);
+	dy = y1 -  pt.y;
+	dx = x1 -  pt.x;
+	max = fmax(fabs(dx), fabs(dy));
+	dx /= max;
+	dy /= max;
+	while ((int)max--)
+	{
+		if (ft_isvalid(pt.x,pt.y, x1, y1))
+			my_mlx_pixel_put(data, pt.x,pt.y, color);
+		pt.x += dx;
+		pt.y += dy;
+	}
 }
 
-void	my_mlx_pixel_put(t_data *data, int x, int y, int color)
+void	draw(t_data *data)
 {
-	char	*dst;
+	t_pt pt;
 
-	dst = data->addr + (x * data->line_length + y * (data->bits_per_pixel / 8));
-	*(unsigned int*)dst = color;
+	pt.x = 0;
+	while ((int)pt.x < data->hight)
+	{
+		pt.y = 0;
+		while((int)pt.y < data->width)
+		{
+			if(pt.y + 1 <= (data->width - 1))
+				drawer(data, pt,pt.x, pt.y + 1);
+			if(pt.x < (data->hight - 1) && (data->map[(int)pt.x + 1] != NULL))
+				drawer(data, pt, pt.x + 1, pt.y);
+		pt.y++;
+		}
+	pt.x++;
+	}
 }
 
-void drawer (t_data img, int x ,int y ,int x1 ,int y1,int color)
+void	getdimention(t_data *data)
 {
-    // while (x != x1)
-    // {
-        x += 20;
-        x1 += 20;
-        y += 20;
-        y1 += 20;
-        while (y != y1 && x != x1)
-        {
-          my_mlx_pixel_put(&img, x, y + 1, color); 
-          my_mlx_pixel_put(&img, x + 1, y, color);
-          y++;
-          x++;
-        }
-    // }
+	data->vars.mizoom = 1;
+	data->sc = 0;
+	data->sv = 0;
+	data->iso = 1;
+	if (data->width < 22)
+	{
+		data->minzom = 5;
+		data->vars.maxzoom = 5;
+	}
+	if (data->width > 20)
+	{
+		data->minzom = 1;
+		data->vars.maxzoom = 0.5;
+	}
+}
+
+void	init(t_data *data, char **av)
+{
+	int i;
+	int j;
+
+	j = 0;
+	i = -1;
+	ft_readfile(av[1], data);
+	data->map = (t_map **)ft_calloc((data->hight + 1), sizeof(t_map *));
+	while (++i < data->hight)
+		data->map[i] = (t_map *)ft_calloc(sizeof(t_map), (data->width + 1));
+	data->map[i] = NULL;
+	getmap(av[1], data);
 }
 
 int main (int ac, char **av)
 {
-    void	*mlx;
-	void	*mlx_win;
-    int i;
-    int j;
-    t_fdf *data;
-    t_map **map;
-	t_data	img;
-
-    i = 0;
-    if (ac != 2)
-        perror("error");
-    data = (t_fdf*)malloc (sizeof(t_fdf));
-    ft_readfile(av[1], data);
-    map = (t_map **)malloc(data->hight * sizeof(t_map));
-    while (i <= data->width)
-        map[i++] = malloc(sizeof(t_map)* data->width);
-    getmap(av[1],data,map);
-	mlx = mlx_init();
-    
-    mlx_win = mlx_new_window(mlx, 1000, 1000, "Hello world!");
-	img.img = mlx_new_image(mlx, 1000, 1000);
-	img.addr = mlx_get_data_addr(img.img, &img.bits_per_pixel, &img.line_length,
-								&img.endian);
-    i = 0;
-    j = 0;
-    while (i++ < data->hight)
-        while(j++ < data->width)
-            drawer(img,j,i,j+1,i+1,0x0FFFFFFF);
-    mlx_put_image_to_window(mlx, mlx_win, img.img, 0, 0);
-    mlx_loop(mlx);
+   
+	t_data *data;
+	data = (t_data *)ft_calloc(sizeof(t_data),1);
+	if (ac != 2)
+		perror("error");
+	init(data, av);
+	getdimention(data);
+	data->mlxx = mlx_init();
+	data->img = mlx_new_image(data->mlxx, SCWITH, SCHIGHT);
+	data->mlx_win = mlx_new_window(data->mlxx,SCWITH,SCHIGHT ,"Hello world!");
+	data->addr = (int *)mlx_get_data_addr(data->img, &data->bits_per_pixel, &data->line_length,
+								&data->endian);
+	draw(data);
+	mlx_hook(data->mlx_win, 2, 0, callback, data);
+	mlx_put_image_to_window(data->mlxx, data->mlx_win, data->img, 0, 0);
+	mlx_loop(data->mlxx);
 }

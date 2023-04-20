@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_strlen.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: kikas <kikas@student.42.fr>                +#+  +:+       +#+        */
+/*   By: aoutifra <aoutifra@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/30 10:08:29 by aoutifra          #+#    #+#             */
-/*   Updated: 2023/03/21 10:59:51 by kikas            ###   ########.fr       */
+/*   Updated: 2023/04/16 01:27:06 by aoutifra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ void	ft_bzero(void *s, size_t n)
 		i++;
 	}
 }
+
 int	wordcount(char **ret, char const *s, char c)
 {
 	int		i;

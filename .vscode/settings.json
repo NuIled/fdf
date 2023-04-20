@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "fdf.h": "c",
+        "mlx.h": "c",
+        "array": "c",
+        "iterator": "c",
+        "string": "c",
+        "string_view": "c",
+        "vector": "c",
+        "get_next_line.h": "c",
+        "stdlib.h": "c",
+        "math.h": "c",
+        "stdio.h": "c",
+        "fcntl.h": "c",
+        "stdbool.h": "c"
+    }
+}
